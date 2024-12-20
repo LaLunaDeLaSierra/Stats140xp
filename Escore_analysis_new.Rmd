@@ -1,0 +1,59 @@
+---
+title: "Escore_analysis_new"
+author: "Jade Gregory"
+date: "2024-03-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+
+```{r}
+edat <- read.csv("merged_data.csv")
+# removing rows with NA values in is_domestic column
+edat <- edat[!is.na(edat$is_domestic), ]
+# adding new column to account for domestic US and domestic non US competitions in one column
+new_domestic <- edat$is_US | edat$is_domestic
+edat$new_domestic <- new_domestic
+# subset the data to create data sets with just domestic and just international competitions
+Escore_dom <- subset(edat, is_domestic == TRUE | is_US == TRUE)
+Escore_int <- subset(edat, is_domestic == FALSE & is_US == FALSE)
+```
+
+
+```{r}
+# boxplot displaying summary stats of domestic vs international scoring
+ggplot(edat, aes(x = new_domestic, y = E_Score, fill = new_domestic)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of E Scores by Competition Type", x = "Competition Type", y = "E Score") +
+  scale_x_discrete(labels = c("FALSE" = "International", "TRUE" = "Domestic")) +
+  theme_light() +
+  theme(legend.position = "none")
+```
+
+
+```{r}
+# frequency of e scores for athletes competing domestically
+ggplot(data = NULL, aes(x = Escore_dom$E_Score)) +
+  geom_histogram(binwidth = 0.25, fill = "lightgreen", color = "black", alpha = 0.7) +
+  labs(title = "Frequence of E Scores for Athletes Competing Domestically", x = "E Score", y = "Frequency") +
+  theme_light()
+# frequency of e scores for athletes competing internationally
+ggplot(data = NULL, aes(x = Escore_int$E_Score)) +
+  geom_histogram(binwidth = 0.25, fill = "lightgreen", color = "black", alpha = 0.7) +
+  labs(title = "Frequence of E Scores for Athletes Competing Internationally", x = "E Score", y = "Frequency") + 
+  theme_light() 
+```
+```{r}
+# t test of domestic e scores vs international e scores
+e_ttest <- t.test(Escore_dom$E_Score, Escore_int$E_Score)
+print(e_ttest)
+```
+
+Our null hypothesis states that the true difference in means between the values of domestic E scores and the values of international E scores is equal to zero. From our t test, we get a p-value of 0.0002283 which is less than our significance level of 0.05. Therefore, we can reject our null hypothesis and conclude that there is a statistically significant difference in means between the two groups. 
+
