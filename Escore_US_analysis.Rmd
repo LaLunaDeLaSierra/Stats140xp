@@ -1,0 +1,56 @@
+---
+title: "Escore_US_analysis"
+author: "Jade Gregory"
+date: "2024-03-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+```{r}
+edat <- read.csv("merged_data.csv")
+# removing rows with NA values in is_domestic column
+edat <- edat[!is.na(edat$is_domestic), ]
+# subsetting data for only US based athletes
+edat_us <- edat[edat$home_country == "United States",]
+# subset with domestic competition vs international competition
+escore_usdom <- subset(edat_us, is_US == TRUE)
+escore_usint <- subset(edat_us, is_US == FALSE)
+```
+
+```{r}
+# boxplot displaying summary stats of domestic vs international scoring for US athletes
+ggplot(edat_us, aes(x = is_US, y = E_Score, fill = is_US)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of E Scores by Competition Type for US Athletes", x = "Competition Type", y = "E Score") +
+  scale_x_discrete(labels = c("FALSE" = "International", "TRUE" = "Domestic")) +
+  theme_light() +
+  theme(legend.position = "none")
+```
+
+```{r}
+# frequency of e scores for US athletes competing domestically 
+ggplot(data = NULL, aes(x = escore_usdom$E_Score)) +
+  geom_histogram(binwidth = 0.25, fill = "lightblue", color = "black", alpha = 0.7) +
+  labs(title = "Frequence of E Scores for US Athletes Competing Domestically", x = "E Score", y = "Frequency") +
+  theme_light()
+# frequency of e scores for US athletes competing internationally
+ggplot(data = NULL, aes(x = escore_usint$E_Score)) +
+  geom_histogram(binwidth = 0.25, fill = "lightblue", color = "black", alpha = 0.7) +
+  labs(title = "Frequence of E Scores for US Athletes Competing Internationally", x = "E Score", y = "Frequency") + 
+  theme_light() 
+```
+
+```{r}
+# t test of domestic e scores vs international e scores
+e_usttest <- t.test(escore_usdom$E_Score, escore_usint$E_Score)
+print(e_usttest)
+```
+
+Our null hypothesis states that the true difference in means is equal to zero. From out t test, we get a p-value of 2.583e-12 which is smaller than our significance level of 0.05. Therefore, we are able to reject our null hypothesis and can conclude that there is a statistically significant difference in means between domestic and international scoring for US athletes. 
+
